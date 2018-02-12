@@ -13,14 +13,7 @@ public class ConnectAI {
         short currentPlayer;
 
 
-        short [][] board = {  {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-                {  0,  0, 0, 0, 0, 0},
-        };    // [column] [row]
+        short [][] board = new short[7][6];    // [column] [row]
 
         setup();
 
@@ -327,7 +320,7 @@ public class ConnectAI {
 
         System.out.println("Welcome to Connect4");
         System.out.println("What is the name of our potential winner?");
-        userName = input.next();
+        userName = input.nextLine();
 
 
         do {
