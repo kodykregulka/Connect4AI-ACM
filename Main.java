@@ -1,5 +1,6 @@
 package C4FX;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
@@ -12,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
 import javafx.event.EventHandler;
+import javafx.util.Duration;
 
 import java.util.BitSet;
 
@@ -27,6 +29,7 @@ public class Main extends Application {
     public static short [][] board = new short [7][6];
     public static short userValue, aiValue;
     public static final short DATASIZE = 56;
+    public static PauseTransition pause;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -60,8 +63,12 @@ public class Main extends Application {
             if(!isUserTurn){  //This is not robust!!!! relies on a new scene. These buttons should not be visible within this scene.
                 aiValue = 1;
                 userValue = 2;
-                aiTurn();
-                isUserTurn = true;
+                pause = new PauseTransition(Duration.millis(1000));
+                pause.play();
+                pause.setOnFinished(event ->
+                        aiTurn()
+                );
+
             }
         });
         userFirstButton.setOnAction((ActionEvent e) -> {
@@ -120,7 +127,11 @@ public class Main extends Application {
                 gameCount++;
                 updateBoardSituation((short)command, nextSpot);
                 isUserTurn = false;
-                aiTurn();
+                pause = new PauseTransition(Duration.millis(1000));
+                pause.play();
+                pause.setOnFinished(event ->
+                        aiTurn()
+                );
 
             }
         }
