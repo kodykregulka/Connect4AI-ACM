@@ -1,17 +1,17 @@
 # Connect4AI-ACM
 Code for a Connect 4 display at engineering week for the University of Toledo. It includes an AI with the ability to look several moves ahead and remember winning decisions.
 
-(Master Branch is console version)
+Authors include: Anthony Welts and Kody Kregulka Anthony Welts (awelts) is the author of the FX application. Kody Kregulka (KodyKregulka) is the author of the game mechanics and AI operations.
 
-Authors include: Anthony Welts and Kody Kregulka
-Anthony Welts (AWelts) is the author of the FX application.
-Kody Kregulka (KodyKregulka) is the author of the console version and game mechanics. 
+Other contributors include Will Collings
 
-*currently has working game mechanics with no implemented AI
-*Recently added:
+Recently added: 
+Fully working AI with limited branch range. Due to the MiniMax algorithm not being optimized, the AI consumes a lot of time calculating the optimal move. The current set range is 7 branches.
+Synchronization of Anthony Weltin's GUI with AI
+Animation has been added to simulate chip drop
 
-Delay before the AI makes its move via Pause transition.
-AI chooses column 1 until full and then throws exceptions
-reset is not fully functional, Doesn't reset all variables.
+In future updates: 
+implementation of hash function to establish machine learning
+new win/loss learning method to improve AI performance. 
 
-*edited by Kody Kregulka 2/12/2018 3:35 PM
+*edited by Kody Kregulka 2/18/2018 10:55 AM
