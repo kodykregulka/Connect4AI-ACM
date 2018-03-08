@@ -11,7 +11,8 @@ Synchronization of Anthony Weltin's GUI with AI
 Animation has been added to simulate chip drop
 
 In future updates: 
-implementation of hash function to establish machine learning
+Implementation of hash function to establish machine learning
 new win/loss learning method to improve AI performance. 
+Improve readability of code.
 
 *edited by Kody Kregulka 2/18/2018 10:55 AM
