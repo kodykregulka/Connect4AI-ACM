@@ -24,14 +24,13 @@ import javafx.event.EventHandler;
 import javafx.util.Duration;
 
 import java.io.*;
-import java.util.BitSet;
-import java.util.Formatter;
-import java.util.Scanner;
-import java.util.Vector;
+import java.util.*;
+
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import java.util.Random;
+
+import static java.util.Objects.hash;
 
 
 public class Main extends Application {
@@ -46,24 +45,26 @@ public class Main extends Application {
     public static short [][] board = new short [7][6];
     public static short userValue, aiValue;
     public static final short DATASIZE = 64;  //49 unique address, 7 choices,4 bits of distance, 1 bit win/loss, 2 bits free, 1 leftToRight;
-    public static final short BRANCHLIMIT = 7;  //normally 7, must be odd to end on a memory search of Ai
+    public static final short BRANCHLIMIT = 7;  //normally 7, must be odd to end on a memory search of AI
     public static final short DECISIONADDRESS = 49;
     public static PauseTransition pause;
 
     public static GridPane startPane = new GridPane(), winnerGridPane = new GridPane();
     public StackPane stackPane1 = new StackPane();
-    public static String usrName = null;
     public Button startBtn;
     public Scene mainScene,startScene;
     public ListView winnerList_LV;
     public ChoiceBox firstPlayerCB;
     public String CBInput;
     public static String playerName;
-    public static File winnersFile=new File("C:\\Users\\kodyk\\OneDrive\\Programming Projects\\Personal Projects\\Connect4.1_FINAL\\src\\C4FX\\winnersFile");////////////////////////////
+    public static File winnersFile=new File("C:\\Users\\kodyk\\OneDrive\\Programming Projects\\Personal Projects\\Connect4.1_FINAL\\src\\C4FX\\winnersFile");
     public HBox hbox=new HBox();
     public static Vector<String> winners=new Vector<>();
     public ObservableList<String> winnerList_OL;
     public static Formatter f;
+    public static boolean shouldEnd = false;
+    public static int hashSize;
+    public static HashMap<BitSet,BitSet> memoryMap;
 
 
     @Override
@@ -173,7 +174,7 @@ public class Main extends Application {
                         mouseClickY = mouseEvent.getSceneY();
                         System.out.println(mouseClickY);
                         try {
-                            if (mouseClickY < 610) {
+                            if (mouseClickY < 610 && !shouldEnd) {
                                 if (mouseClickX < 15) ;
                                 else if (mouseClickX < 110)
                                     takeUserInput(0);
@@ -238,7 +239,6 @@ public class Main extends Application {
                             }
                         }
                         );
-
                     }
                 }
             }
@@ -253,16 +253,20 @@ public class Main extends Application {
                 boolean[] safeBranches = new boolean[7];
                 temp = new short[7][6];
 
+                if(shouldEnd){
+                    isUserTurn = true;
+                    return;
+                }
+
+                /*
                 BitSet head = new BitSet(56);
                 byte[] foo;
 
                 foo = head.toByteArray();
-
-                ///////////////////////////////////////////////////////////////////////////
-
+                */
 
                 System.out.println("AI turn");
-                column = 3;
+                column = 0;
                 bestBranch = -100;
 
                 memoryResults = searchMemory(encodeBoard(temp));
@@ -282,7 +286,7 @@ public class Main extends Application {
                         row = findNextSpot(temp[i]);
                         if (row > 5 || row < 0) continue;
                         temp[i][row] = aiValue;
-                        System.out.println("new big branch " + i); //**************************************************
+                        System.out.println("new big branch " + i);
                         printConsoleBoard(temp);
 
 
@@ -596,6 +600,7 @@ public class Main extends Application {
 
             public static TranslateTransition updateBoardSituation(short column, short row) {
                 Chip temp;
+                boolean shouldEnd;
                 TranslateTransition dropping;
                 temp = new Chip(board[column][row]);
                 dropping = temp.placeChip(column, row);
@@ -603,21 +608,24 @@ public class Main extends Application {
 
                     printConsoleBoard(board);
 
-
                     if(checkWin(column, row, board)){
                         Stage victoryStage=new Stage();
                         Label victoryText=new Label();
-
-
-
+                        shouldEnd = true;
 
 
                         if(isUserTurn){
                             victoryText.setText(playerName+", you have won!");
                             winners.add(playerName);
+                            // remember loss!!!!!
+                            //saveStatsFile("loss");
+                            //stats file, record
                         }
                         else if(!isUserTurn){
                             victoryText.setText("The Computer has won!");
+                            //saveStatsFile("win");
+                            //remember path if applicable
+
                         }
 
                         writeFile();
@@ -627,12 +635,13 @@ public class Main extends Application {
                         victoryStage.setScene(victoryScene);
                         victoryStage.show();
 
-                    }
-
-                    else if(gameCount >= 42){
+                    } else if(gameCount >= 42){
                         System.out.println("Draw");
+                        //saveStatsFile("draw");
+                        shouldEnd = true;
                         //save game
                     }
+
 
                     if(!isUserTurn){
                         currentPlayer.setText(" Player");
@@ -645,7 +654,70 @@ public class Main extends Application {
 
                     }
                     return dropping;
+    }
+    public static void saveStatsFile(String input){
+            try{
+                f=new Formatter("C:\\Users\\kodyk\\OneDrive\\Programming Projects\\Personal Projects\\Connect4.1_FINAL\\src\\C4FX\\Stats.txt");
+            }catch(Exception e){
+                System.out.println(e);
             }
+
+            for(int i=0;i<winners.size();i++){
+                f.format(winners.get(i)+"\n");
+            }
+            f.close();
+    }
+    public static void readInMemoryFile() throws FileNotFoundException {
+        File F;
+        String line;
+        BitSet temp;
+        int size, hashValue, address;
+
+
+        F = new File("Memory.txt");
+        size = 0;
+
+        try {
+            Scanner scanFile = new Scanner(F);
+            if(scanFile.hasNextLine()){
+                size = scanFile.nextInt();
+                hashSize = calculateSize(size);
+                memoryMap = new HashMap(hashSize);
+
+            }
+            for(int i = 0; i < size;size++ ) {
+                line = scanFile.nextLine();
+                temp = toBitSet(line);
+                memoryMap.put(temp.get(0,48),temp);
+            }
+        }catch(FileNotFoundException ex){
+            throw new FileNotFoundException("filenotfound");
+        }
+    }
+    public static void writeMemoryFile(){
+
+        for (Map.Entry<BitSet, BitSet> entry : memoryMap.entrySet()) {
+            entry.getValue();
+        }
+    }
+    public static int calculateSize(int input){
+        int size, i;
+        i = 13;
+
+
+
+        if(input < 4000){
+            size = 8191;
+        } else{
+            input = input*2;
+
+            do {
+                size = (int)Math.pow(2,i)-1;
+                i++;
+            }while(input > size);
+        }
+        return size;
+    }
     public static void writeFile(){
         try{
             f=new Formatter("C:\\Users\\kodyk\\OneDrive\\Programming Projects\\Personal Projects\\Connect4.1_FINAL\\src\\C4FX\\winnersFile");
@@ -659,18 +731,28 @@ public class Main extends Application {
         f.close();
     }
 
-            public static void printConsoleBoard(short[][] temp) {
-                for (int row = 5; row >= 0; row--) {
-                    for (int column = 0; column <= 6; column++) {
-                        System.out.print(" " + temp[column][row] + " ");
-                    }
-                    System.out.println("");
-                }
-                System.out.println(" A  B  C  D  E  F  G");
-            }
+    public static BitSet toBitSet(String command){
+        BitSet results;
+        results = new BitSet(DATASIZE);
+        for(int i = 0; i < DATASIZE; i++){
+            if(command.charAt(i) == 49)
+                results.get(i);
+        }
+        return results;
+    }
 
-            public static boolean checkWin(short column, short row, short[][] temp) {
-                short sum;
+    public static void printConsoleBoard(short[][] temp) {
+        for (int row = 5; row >= 0; row--) {
+            for (int column = 0; column <= 6; column++) {
+                System.out.print(" " + temp[column][row] + " ");
+                }
+                System.out.println("");
+            }
+            System.out.println(" A  B  C  D  E  F  G");
+        }
+
+        public static boolean checkWin(short column, short row, short[][] temp) {
+        short sum;
                 sum = 0;
 
                 sum += checkHorizontal(column, row, temp);
@@ -755,7 +837,7 @@ public class Main extends Application {
 
             public static short findNextSpot(short[] column) {
                 short results;
-                results = -1;
+                results = 7;
 
                 for (int i = 0; i < column.length; i++) {
                     if (column[i] == 0) {
